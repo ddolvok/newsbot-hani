@@ -1,5 +1,3 @@
 requests
-json
 streamlit
-BeautifulSoup
 bs4
