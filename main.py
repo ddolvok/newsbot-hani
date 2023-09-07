@@ -11,7 +11,7 @@ if 'summarized_content' not in st.session_state:
 API_KEY = st.secrets["api_key"]
 MAX_RETRY = 10
 WAIT_TIME = 5
-MAX_ARTICLE_SIZE = 2500  
+MAX_ARTICLE_SIZE = 3500  
 
 def fetch_from_openai(model, messages, spinner_text):
     with st.spinner(spinner_text):
@@ -107,7 +107,7 @@ def main():
             ][crawled_count - 1]  
             summarized_content += fetch_from_openai("gpt-4", [
                 {"role": "user",
-                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 신문 기사 스타일의 보고 자료를 만들어. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 기사 스타일의 보고 자료로 만들거야. 키워드, 숫자 등을 잘 확인해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 내용들은 빼고 2500자 이내로 써 줘."}  # 수정한 부분
+                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 보고 자료를 만들어. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 보고 자료로 만들거야. 키워드, 숫자 등을 잘 확인해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 내용들은 빼고 2500자 이내로 써 줘. 내용 중에 [] 이 대괄호나 = 이런 부호가 들어가지 않게 해줘."}  # 수정한 부분
             ], spinner_text)
         
         st.session_state.summarized_content = summarized_content
