@@ -71,13 +71,13 @@ def crawl_and_get_article(url, index):
     return crawled_article
 
 def main():
-    st.title("미디어랩 뉴스봇 보고봇 Project")
+    st.title("미디어랩 뉴스봇 보고봇 프로젝트")
     
-    keyword1 = st.text_input("1번 검색어 : ")
-    keyword2 = st.text_input("2번 검색어 : ")
-    keyword3 = st.text_input("3번 검색어 : ")
+    keyword1 = st.text_input("1번 키워드 : ")
+    keyword2 = st.text_input("2번 키워드 : ")
+    keyword3 = st.text_input("3번 키워드 : ")
     
-    if st.button("이슈 가져오기"):
+    if st.button("이슈 분석하기"):
         base_url = "https://search.naver.com/search.naver?sm=tab_hty.top&where=news&query="
         search_url = base_url + keyword1 + "+" + keyword2 + "+" + keyword3
         r = requests.get(search_url)
@@ -85,7 +85,7 @@ def main():
         naver_news_links = [a_tag['href'] for a_tag in soup.select('.info') if '네이버뉴스' in a_tag.text]
 
         if not naver_news_links:
-            st.markdown("<span style='color:red'>검색어를 다시 조정해서 시도해주세요.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='color:red'>키워드를 다시 조정해서 시도해주세요.</span>", unsafe_allow_html=True)
             return
 
         summarized_content = ""
