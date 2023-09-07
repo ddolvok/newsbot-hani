@@ -11,7 +11,7 @@ if 'summarized_content' not in st.session_state:
 API_KEY = st.secrets["api_key"]
 MAX_RETRY = 10
 WAIT_TIME = 5
-MAX_ARTICLE_SIZE = 3500  
+MAX_ARTICLE_SIZE = 3000  
 
 def fetch_from_openai(model, messages, spinner_text):
     with st.spinner(spinner_text):
@@ -107,7 +107,7 @@ def main():
             ][crawled_count - 1]  
             summarized_content += fetch_from_openai("gpt-4", [
                 {"role": "user",
-                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 기사 스타일로 써진 보고 자료를 만들어. 제목은 쓰지마. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 보고 자료로 만들거야. 키워드, 숫자 등을 잘 확인해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 2500자 이내로 써 줘. '됐다' '했다' 등 반말로 정리해. 내용 중에 [] 이 대괄호나 = 이런 부호가 들어가지 않게 해줘."}  # 수정한 부분
+                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 기사 스타일로 써진 보고 자료를 만들어. 제목은 쓰지마. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 보고 자료로 만들거야. 다른 내용을 시작할 때는 기사처럼 줄바꿈을 특히 잘 해줘. 키워드, 숫자 등을 잘 확인해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 2500자 이내로 써 줘. '됐다' '했다' 등 반말로 정리해. 내용 중에 [] 이 대괄호나 = 이런 부호가 들어가지 않게 해줘."}
             ], spinner_text)
         
         st.session_state.summarized_content = summarized_content
@@ -122,7 +122,7 @@ def main():
             with st.spinner('GPT-4가 기사로 만들고 있어요.'):
                 article_content = fetch_from_openai("gpt-4", [
                     {"role": "user",
-                     "content": f"{st.session_state.summarized_content} 를 토대로 신문 기사를 쓸거야. 650자에서 1500자 내로 기사를 써 줘. 특히 숫자와 관련된 내용은 모두 나오도록 해 줘. 기사처럼 줄바꿈을 특히 잘 활용해. 앞서 작성한 리드문 '{prompt}'에서 기사를 시작해. 정리된 내용 중에서 리드문과 관련성이 높은 내용들을 중심으로 기사를 써 줘."}
+                     "content": f"{st.session_state.summarized_content} 를 토대로 신문 기사를 쓸거야. 1500자 내로 기사를 써 줘. 특히 숫자와 관련된 내용은 모두 나오도록 해 줘. 기사처럼 줄바꿈을 특히 잘 활용해. 앞서 작성한 리드문 '{prompt}'에서 기사를 시작해. 정리된 내용 중에서 리드문과 관련성이 높은 내용들을 중심으로 기사를 써 줘."}
                 ], '좀 오래 걸릴 수 있어요 ㅎㅎ 기다려주세요.')
                 st.write(article_content)
 
