@@ -107,7 +107,7 @@ def main():
             ][crawled_count - 1]  
             summarized_content += fetch_from_openai("gpt-4", [
                 {"role": "user",
-                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 하나의 줄거리로 표현된 기사 스타일 보고 자료를 만들어. 어떻게든 완성도를 높여라. 제목은 쓰지마. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 보고 자료로 만들거야. 줄바꿈도 신경 써 줘. 키워드, 숫자 등을 잘 확인해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 2500자 이내로 써 줘. '됐다' '했다' 등 반말로 정리해. 내용 중에 [] 이 대괄호나 = 이런 부호가 들어가지 않게 해줘."}
+                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 기사 스타일로 쓰여진 보고 자료를 만들어. 제목은 쓰지마. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 보고 자료로 만들거야. 다른 주제의 기사 내용이 나올 때는 줄바꿈 잘 해. 키워드, 숫자 등이 모두 정확히 나오도록 해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 2500자 이내로 써 줘. '됐다' '했다' 등 반말로 정리해. 내용 중에 [] 이 대괄호나 = 이런 부호가 들어가지 않게 해줘."}
             ], spinner_text)
         
         st.session_state.summarized_content = summarized_content
