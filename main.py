@@ -105,7 +105,7 @@ def main():
             ][crawled_count - 1]
             summarized_content += fetch_from_openai("gpt-4", [
                 {"role": "user",
-                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 기사 스타일로 쓰여진 보고 자료를 만들어. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 보고 자료로 만들거야. 다른 주제의 기사 내용이 나올 때는 줄바꿈 잘 해. 키워드, 숫자 등이 모두 정확히 나오도록 해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 2200자 이내로 써 줘. '됐다' '했다' 등 반말로 정리해. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
+                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 기사 스타일로 쓰여진 보고 자료를 만들어. 기사들에서 다루는 공통된 내용은 잘 정리해서 하나로 만들고, 공통되지 않는 내용은 줄 바꿔서 자연스럽게 이어가서 문장을 완성해. 주제나 키워드, 숫자 등이 모두 정확히 나오도록 해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 2000자 이내로 '~습니다' 같은 존댓말로 써 줘. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
             ], spinner_text)
         
         st.session_state.summarized_content = summarized_content
@@ -124,7 +124,7 @@ def main():
         final_article_content = st.session_state.prompt + "\n\n" + st.session_state.summarized_content
         st.session_state.final_article_content = fetch_from_openai("gpt-4", [
             {"role": "user",
-             "content": f"{final_article_content} 를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 톤으로 1500자 내로 기사를 써 줘. 특히 숫자와 관련된 내용은 모두 나오도록 해 줘. 기사처럼 줄바꿈을 잘 활용해. {st.session_state.prompt}에 써놓은 리드문으로 기사를 시작해서 내용을 이어가. 정리된 내용 중에서 리드문과 관련성이 높은 내용들을 중심으로 기사를 써 줘. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
+             "content": f"{final_article_content} 를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 톤으로 1200자 내로 기사를 써 줘. 특히 숫자와 관련된 내용은 정확하게 써 줘. {st.session_state.prompt}에 써놓은 내용으로 문장을 시작해서 내용을 완성해. 리드문과 관련성이 높은 내용들을 중심으로 기사를 써 줘. '~했다' '~됐다'와 같은 반말로 써. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
         ], "GPT4가 리포트를 기사 초안으로 만들고 있습니다.")
 
     if st.session_state.final_article_content:
