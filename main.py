@@ -7,6 +7,8 @@ import json
 
 if 'summarized_content' not in st.session_state:
     st.session_state.summarized_content = ""
+if 'final_article_content' not in st.session_state:
+    st.session_state.final_article_content = ""
 
 API_KEY = st.secrets["api_key"]
 MAX_RETRY = 10
@@ -64,7 +66,6 @@ def crawl_and_get_article(url, index):
         return None
 
     crawled_article = {"title": title_text, "content": article_text}
-
     with open(f'crawled_article_{index}.json', 'w') as f:
         json.dump(crawled_article, f)
     
@@ -73,11 +74,11 @@ def crawl_and_get_article(url, index):
 def main():
     st.title("미디어랩 뉴스봇 보고봇 프로젝트")
     
-    keyword1 = st.text_input("1번 키워드 : ")
-    keyword2 = st.text_input("2번 키워드 : ")
-    keyword3 = st.text_input("3번 키워드 : ")
+    keyword1 = st.text_input("1번 검색어 : ")
+    keyword2 = st.text_input("2번 검색어 : ")
+    keyword3 = st.text_input("3번 검색어 : ")
     
-    if st.button("이슈 분석하기"):
+    if st.button("이슈 가져오기"):
         base_url = "https://search.naver.com/search.naver?sm=tab_hty.top&where=news&query="
         search_url = base_url + keyword1 + "+" + keyword2 + "+" + keyword3
         r = requests.get(search_url)
@@ -85,32 +86,31 @@ def main():
         naver_news_links = [a_tag['href'] for a_tag in soup.select('.info') if '네이버뉴스' in a_tag.text]
 
         if not naver_news_links:
-            st.markdown("<span style='color:red'>키워드를 다시 조정해서 시도해주세요.</span>", unsafe_allow_html=True)
+            st.markdown("<span style='color:red'>검색어를 다시 조정해서 시도해주세요.</span>", unsafe_allow_html=True)
             return
 
         summarized_content = ""
-
         crawled_count = 0  
         for index, link in enumerate(naver_news_links):
-            if crawled_count >= 3:  
+            if crawled_count >= 3:
                 break
             crawled_article = crawl_and_get_article(link, index + 1)
-            if crawled_article is None:  
-                continue  
+            if crawled_article is None:
+                continue
 
-            crawled_count += 1  
-
+            crawled_count += 1
             spinner_text = [
                 "첫 기사를 GPT4가 정리 하고 있습니다.",
                 "다음 기사를 GPT4가 정리하고 있습니다.",
                 "마지막 기사를 GPT4가 정리하고 있습니다."
-            ][crawled_count - 1]  
+            ][crawled_count - 1]
             summarized_content += fetch_from_openai("gpt-4", [
                 {"role": "user",
                  "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 기사 스타일로 쓰여진 보고 자료를 만들어. 제목은 쓰지마. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 보고 자료로 만들거야. 다른 주제의 기사 내용이 나올 때는 줄바꿈 잘 해. 키워드, 숫자 등이 모두 정확히 나오도록 해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 2200자 이내로 써 줘. '됐다' '했다' 등 반말로 정리해. 내용 중에 [] 이 대괄호나 = 이런 부호가 들어가지 않게 해줘."}
             ], spinner_text)
         
         st.session_state.summarized_content = summarized_content
+        st.write("## 보고 자료")
         st.write(st.session_state.summarized_content)
 
     prompt = st.text_area("리드문을 대략 써서 넣으세요.", height=300)
@@ -124,7 +124,17 @@ def main():
                     {"role": "user",
                      "content": f"{st.session_state.summarized_content} 를 토대로 신문 기사를 쓸거야. 1500자 내로 기사를 써 줘. 특히 숫자와 관련된 내용은 모두 나오도록 해 줘. 기사처럼 줄바꿈을 특히 잘 활용해. 앞서 작성한 리드문 '{prompt}'에서 기사를 시작해. 정리된 내용 중에서 리드문과 관련성이 높은 내용들을 중심으로 기사를 써 줘."}
                 ], '좀 오래 걸릴 수 있어요 ㅎㅎ 기다려주세요.')
-                st.write(article_content)
+                st.session_state.final_article_content = article_content
+                st.write("## 최종 기사")
+                st.write(st.session_state.final_article_content)
+                
+                if st.session_state.final_article_content:
+                    st.download_button(
+                        label="다운로드",
+                        data=st.session_state.final_article_content.encode("utf-8"),
+                        file_name="generated_article.txt",
+                        mime="text/plain",
+                    )
 
 if __name__ == "__main__":
     main()
