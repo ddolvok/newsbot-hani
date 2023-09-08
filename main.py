@@ -119,7 +119,7 @@ def main():
         if len(prompt) <= 10:
             st.markdown("<span style='color:red'>10자 이상 써 주세요.</span>", unsafe_allow_html=True)
         else:
-            with st.spinner('GPT-4가 기사로 만들고 있어요.'):
+            with st.spinner('GPT-4가 기사 초안 자료를 만들고 있어요.'):
                 article_content = fetch_from_openai("gpt-4", [
                     {"role": "user",
                      "content": f"{st.session_state.summarized_content} 를 토대로 신문 기사를 쓸거야. 1500자 내로 기사를 써 줘. 특히 숫자와 관련된 내용은 모두 나오도록 해 줘. 기사처럼 줄바꿈을 특히 잘 활용해. 앞서 작성한 리드문 '{prompt}'에서 기사를 시작해. 정리된 내용 중에서 리드문과 관련성이 높은 내용들을 중심으로 기사를 써 줘."}
