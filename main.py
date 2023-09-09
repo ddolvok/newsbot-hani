@@ -18,6 +18,7 @@ API_KEY = st.secrets["api_key"]
 MAX_RETRY = 10
 WAIT_TIME = 5
 MAX_ARTICLE_SIZE = 2500
+ARTICLE_SEPARATOR = "\n\n---\n\n"  # New line
 
 def fetch_from_openai(model, messages, spinner_text):
     with st.spinner(spinner_text):
@@ -103,11 +104,12 @@ def main():
                 "다음 기사를 GPT4가 정리하고 있습니다.",
                 "마지막 기사를 GPT4가 정리하고 있습니다."
             ][crawled_count - 1]
-            summarized_content += fetch_from_openai("gpt-4", [
+            article_summary = fetch_from_openai("gpt-4", [
                 {"role": "user",
                  "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 기사 스타일로 쓰여진 보고 자료를 만들어. 기사들에서 다루는 공통된 내용은 하나로 합쳐서 정리해주고, 이어서 크롤링 되어 분석하는 기사의 내용이 직전 내용과 다른 세부 내용을 다루는 경우 줄을 바꿔서 정리본을 다시 시작해. 같은 내용을 다루더라도 다른 기사의 내용은 줄 바꿔서 다시 시작해. 숫자는 정확히 나오도록 정리해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 2500자 이내로 써 줘. 문장의 마무리는 늘 '했다' '됐다' '줬다' '였다' 처럼 끝내야 해. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
             ], spinner_text)
-        
+            summarized_content += article_summary + ARTICLE_SEPARATOR  # Add separator between articles
+
         st.session_state.summarized_content = summarized_content
 
     if st.session_state.summarized_content:
@@ -121,23 +123,15 @@ def main():
             st.markdown("<span style='color:red'>10자 이상의 리드문을 입력해주세요.</span>", unsafe_allow_html=True)
             return
 
-        final_article_content = st.session_state.prompt + "\n\n" + st.session_state.summarized_content
-        st.session_state.final_article_content = fetch_from_openai("gpt-4", [
-            {"role": "user",
-             "content": f"{final_article_content} 를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 문장 구조로 1200자 내로 기사를 써 줘. 특히 숫자와 관련된 내용을 다룰 때 틀리지마. {st.session_state.prompt}에 써놓은 리드문으로 문장을 시작해서 내용을 완성해. 리드문과 관련된 내용들을 중심으로 기사를 써 줘. '~했다' '~됐다'와 같은 반말로 써. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
-        ], "GPT4가 리포트를 기사 초안으로 만들고 있습니다.")
+        final_article_content = fetch_from_openai("gpt-4", [
+            {"role": "user", "content": f"리포트 제목: {keyword1} {keyword2} {keyword3}에 대한 분석 보고서\n\n리드문:\n{st.session_state.prompt}\n\n보고서 내용:\n{st.session_state.summarized_content}"}
+        ], "보고서를 완성하고 있습니다.")
+
+        st.session_state.final_article_content = final_article_content
 
     if st.session_state.final_article_content:
-        st.write("## 기사 초안")
+        st.write("## 완성된 리포트")
         st.write(st.session_state.final_article_content)
-
-    if st.session_state.final_article_content:
-        st.download_button(
-                        label="다운로드",
-                        data=st.session_state.final_article_content.encode("utf-8"),
-                        file_name="generated_article.txt",
-                        mime="text/plain",
-                    )
 
 if __name__ == "__main__":
     main()
