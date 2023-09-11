@@ -105,7 +105,7 @@ def main():
             ][crawled_count - 1]
             summarized_content += fetch_from_openai("gpt-4", [
                 {"role": "user",
-                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 신문 기사 스타일의 보고 자료를 만들어. 다루는 공통된 내용과 공통되지 않은 내용 모두 포함해 전체 내용이 잘 드러나는 기사 스타일의 보고 자료로 만들거야. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 등 6하 원칙을 정확히 지키면서 숫자 등은 정확하게 확인해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 내용들은 빼고 2500자 이내로 써 줘. 문장의 마무리는 늘 '했다' '됐다' '줬다' '였다' 처럼 끝내야 해. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
+                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 신문 기사 스타일의 보고 자료를 만들어. 기사에서 다루는 내용들을 하나로 잘 합쳐서 기사 스타일의 보고 자료로 만들거야. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 등 6하 원칙을 정확히 지키면서 숫자 등은 정확하게 확인해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 내용들은 빼고 2500자 이내로 써 줘. 문장의 마무리는 늘 '했다' '됐다' '줬다' '였다' 처럼 끝내야 해. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
             ], spinner_text)
         
         st.session_state.summarized_content = summarized_content
@@ -124,7 +124,7 @@ def main():
         final_article_content = st.session_state.prompt + "\n\n" + st.session_state.summarized_content
         st.session_state.final_article_content = fetch_from_openai("gpt-4", [
             {"role": "user",
-             "content": f"이 리포트({st.session_state.summarized_content})를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 문장 구조로 1500자 이내로 기사를 써 줘. 특히 숫자와 관련된 내용을 다룰 때는 최대한 길게 기사를 써 줘. 숫자가 많지 않으면 기사를 800자 정도 써도 좋아. {st.session_state.prompt}에 써놓은 기사 시작문으로 문장을 시작해. 기사 시작문과 관련된 내용으로만 기사 초안을 만들어 줘. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 같은 6하원칙을 모두 잘 적용해서 기사를 써 줘. '~한다' '~된다' '~했다' '~됐다'와 같은 반말로 써."}
+             "content": f"이 리포트({st.session_state.summarized_content})를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 문장 구조로 1000자 이내로 기사를 써 줘. 특히 참조용 리포트 중에서 숫자는 최대한 많이 반영해서 기사를 써 줘. {st.session_state.prompt}에 써놓은 기사 시작문으로 문장을 시작해. 기사 시작문과 관련된 내용으로만 기사 초안을 만들어 줘. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 같은 6하원칙을 모두 잘 적용해서 기사를 써 줘. '~한다' '~된다' '~했다' '~됐다'와 같은 반말로 써."}
         ], "GPT4가 리포트를 기사 초안으로 만들고 있습니다.")
 
     if st.session_state.final_article_content:
