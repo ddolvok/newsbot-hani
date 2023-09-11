@@ -3,7 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
-import json
+import smtplib
+from email.mime.text import MIMEText
 
 if 'summarized_content' not in st.session_state:
     st.session_state.summarized_content = ""
@@ -14,7 +15,6 @@ if 'prompt' not in st.session_state:
 
 API_KEY = st.secrets["api_key"]
 
-# Constants
 MAX_RETRY = 10
 WAIT_TIME = 5
 MAX_ARTICLE_SIZE = 2500
@@ -70,6 +70,16 @@ def crawl_and_get_article(url, index):
 
     return {"title": title_text, "content": article_text}
 
+def send_email(email, content):
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+    server.login('your_email@gmail.com', 'your_password')
+    msg = MIMEText(content, 'plain', 'utf-8')
+    msg['Subject'] = 'Your Generated Article'
+    msg['From'] = 'your_email@gmail.com'
+    msg['To'] = email
+    server.send_message(msg)
+    server.quit()
+
 def main():
     st.title("미디어랩 뉴스봇 프로젝트")
     
@@ -114,6 +124,13 @@ def main():
         st.write("## 참고용 리포트")
         st.write(st.session_state.summarized_content)
 
+        st.download_button(
+        label="리포트 다운로드",
+        data=st.session_state.summarized_content.encode("utf-8"),
+        file_name="summarized_report.txt",
+        mime="text/plain"
+    )
+
     st.session_state.prompt = st.text_area("리드문을 대략 써서 넣으세요.", st.session_state.prompt, height=300)
 
     if st.button("생성하기"):
@@ -129,15 +146,23 @@ def main():
 
     if st.session_state.final_article_content:
         st.write("## 기사 초안")
-        st.write(st.session_state.final_article_content)
+        st.write(st.session_state.final_article_content)  
 
-    if st.session_state.final_article_content:
         st.download_button(
-                        label="다운로드",
-                        data=st.session_state.final_article_content.encode("utf-8"),
-                        file_name="generated_article.txt",
-                        mime="text/plain",
-                    )
+            label="기사 초안 다운로드",
+            data=st.session_state.final_article_content.encode("utf-8"),
+            file_name="generated_article.txt",
+            mime="text/plain"
+        )
+
+    if st.session_state.final_article_content: 
+        email_input = st.text_input("이메일 주소")
+        if st.button("이메일 보내기"):
+            if email_input:
+                send_email(email_input, st.session_state.final_article_content)
+                st.success(f"{email_input}로 기사 초안을 보냈습니다.")
+            else:
+                st.error("유효한 이메일 주소를 입력해주세요.")
 
 if __name__ == "__main__":
     main()
