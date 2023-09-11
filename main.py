@@ -1,9 +1,13 @@
+from difflib import SequenceMatcher
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import re
 import time
 import json
+
+def similarity(text1, text2):
+    return SequenceMatcher(None, text1, text2).ratio()
 
 if 'summarized_content' not in st.session_state:
     st.session_state.summarized_content = ""
@@ -47,7 +51,7 @@ def fetch_from_openai(model, messages, spinner_text):
         st.error(f"{MAX_RETRY}번 시도하고 실패함. 잠시 후 다시 해보세요.")
         return None
 
-def crawl_and_get_article(url, index):
+def crawl_and_get_article(url, index, existing_contents=[]):
     for _ in range(MAX_RETRY):
         r = requests.get(url)
         if r.status_code == 200:
@@ -68,6 +72,11 @@ def crawl_and_get_article(url, index):
     if len(article_text) > MAX_ARTICLE_SIZE:
         return None
 
+    # Check for similarity
+    for content in existing_contents:
+        if similarity(content, article_text) > 0.3:
+            return None
+
     return {"title": title_text, "content": article_text}
 
 # def duplicates(content):
@@ -80,7 +89,7 @@ def crawl_and_get_article(url, index):
 
 def main():
     st.title("미디어랩 뉴스봇 프로젝트")
-    
+
     keyword1 = st.text_input("1번 검색어 : ")
     keyword2 = st.text_input("2번 검색어 : ")
     keyword3 = st.text_input("3번 검색어 : ")
@@ -98,12 +107,17 @@ def main():
 
         summarized_content = ""
         crawled_count = 0
+        existing_articles = []
+
         for index, link in enumerate(naver_news_links):
             if crawled_count >= 3:
                 break
-            crawled_article = crawl_and_get_article(link, index + 1)
+            crawled_article = crawl_and_get_article(link, index + 1, existing_articles)
             if crawled_article is None:
                 continue
+
+            # Append the article to existing_articles list
+            existing_articles.append(crawled_article['content'])
 
             crawled_count += 1
             spinner_text = [
