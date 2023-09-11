@@ -124,7 +124,7 @@ def main():
         final_article_content = st.session_state.prompt + "\n\n" + st.session_state.summarized_content
         st.session_state.final_article_content = fetch_from_openai("gpt-4", [
             {"role": "user",
-             "content": f"{final_article_content} 중에서 정보를 가져와 신문 기사를 쓸거야. {st.session_state.prompt}에 써놓은 리드문으로 문장을 시작할거야. 리드문과 관련된 내용만으로 기사를 만들어. 정리된 리포트 내용과 조금 다른 문장 구조로 1000자 내로 기사를 써 줘. 특히 숫자와 관련된 내용을 다룰 때 틀리지마. '~했다' '~됐다'와 같은 반말로 써."}
+             "content": f"{final_article_content} 이 리포트 중에서 정보를 가져와 신문 기사를 써 줘. {st.session_state.prompt}에 써놓은 기사 시작문으로 문장을 시작해 줘. 참고하는 리포트 중에서 기사 시작문 부분 뒤쪽에 있는 정보들로만 기사를 만들어야 해. 정리된 리포트 내용과 조금 다른 문장 구조로 1000자 내로 기사를 써 줘. 특히 숫자와 관련된 내용을 다룰 때 틀리지마. '~한다' '~된다' '~했다' '~됐다'와 같은 반말로 써."}
         ], "GPT4가 리포트를 기사 초안으로 만들고 있습니다.")
 
     if st.session_state.final_article_content:
