@@ -131,7 +131,9 @@ def main():
         if i < len(lines) - 1:
             st.markdown("<hr/>", unsafe_allow_html=True)
 
-    st.session_state.prompt = st.text_area("리드문을 대략 써서 넣으세요.", st.session_state.prompt, height=300)
+    st.markdown("<span style='color: blue; font-size: large;'>리드문을 아래 필드에 대략 써서 넣으세요.</span>", unsafe_allow_html=True)
+    st.session_state.prompt = st.text_area("('6하 원칙'이 포함되면 더 정확한 결과를 만듭니다.)", st.session_state.prompt, height=300)
+
 
     if st.button("생성하기"):
         if len(st.session_state.prompt) <= 10:
