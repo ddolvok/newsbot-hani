@@ -117,7 +117,7 @@ def main():
     
             summarized_content += fetch_from_openai("gpt-4", [
             {"role": "user",
-             "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 문장 구조나 표현 방법 등을 바꿔서 보고서 스타일로 정리해. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 등 6하 원칙을 모두 포함해. 숫자 관련된 내용은 결과물에 전부 포함시키고 절대 틀리지 마. 담을 수 있는 내용 모두를 담아서 전체 2500자 정도 써 줘. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 '합니다' '습니다' 같은 존댓말로 써 줘. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
+             "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 문장 구조나 표현 방법 등을 바꿔서 보고서 스타일로 정리해. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 등 6하 원칙을 모두 포함해. 숫자 관련된 내용은 결과물에 전부 포함시키고 절대 틀리지 마. 담을 수 있는 내용 모두를 담아서 전체 1500자 이내로 써 줘. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼 줘. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
             ], spinner_text)
         
         # st.session_state.summarized_content = duplicates(summarized_content)
@@ -147,7 +147,7 @@ def main():
         final_article_content = st.session_state.prompt + "\n\n" + st.session_state.summarized_content
         st.session_state.final_article_content = fetch_from_openai("gpt-4", [
             {"role": "user",
-             "content": f"이 리포트({st.session_state.summarized_content}) 이 리포트를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 문장 구조로 1200자 내로 기사를 써 줘. 특히 숫자와 관련된 내용을 다룰 때 틀리지마. ({st.session_state.prompt})에 써놓은 문장으로 기사를 시작해줘. 전체 리포트 중에서 기사 시작문을 중심으로 기사를 써 줘. '~했다' '~됐다'와 같은 반말로 써."}
+             "content": f"이 리포트({st.session_state.summarized_content}) 이 리포트를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 문장 구조로 1000자 내로 기사를 써 줘. 특히 숫자와 관련된 내용을 다룰 때 틀리지마. ({st.session_state.prompt})에 써놓은 문장으로 기사를 시작해줘. 전체 리포트 중에서 기사 시작문을 중심으로 기사를 써 줘. '~했다' '~됐다'와 같은 반말로 써."}
         ], "GPT4가 리포트를 기사 초안으로 만들고 있습니다.")
 
     if st.session_state.final_article_content:
