@@ -9,10 +9,19 @@ import json
 def similarity(text1, text2):
     return SequenceMatcher(None, text1, text2).ratio()
 
+def remove_duplicates_from_summaries(summaries):
+    unique_summaries = []
+    for summary in summaries:
+        if all(similarity(summary, unique_summary) <= 0.3 for unique_summary in unique_summaries):
+            unique_summaries.append(summary)
+    return unique_summaries
+
 if 'summarized_content' not in st.session_state:
     st.session_state.summarized_content = ""
+
 if 'final_article_content' not in st.session_state:
     st.session_state.final_article_content = ""
+
 if 'prompt' not in st.session_state:
     st.session_state.prompt = ""
 
@@ -82,13 +91,13 @@ def crawl_and_get_article(url, index, existing_contents=[]):
 # def duplicates(content):
 #     response = fetch_from_openai("gpt-4", [
 #         {"role": "user",
-#          "content": f"{content} 이 리포트에서 내용을 합쳐서 800자에서 1500자 사이로 정리해 줘. 6하 원칙을 모두 살려서 결과를 만들어. 중복된 내용은 최대한 합치고, 중복되지 않은 내용들은 결과물에 모두 나열해 줘. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼."}
+#          "content": f"{content} 현재 1번과 2번 3번 내용이 중앙 선을 기준으로 나눠져 있어. 1번 내용과 2번 내용 3번 내용 중에서 만약 똑같은 내용을 다루는 게 있으면 지워줘. 이미 나온 내용은 바꾸지는 마. 중복된 걸 지우기만 해."}
 #     ], "GPT4가 참고용 리포트를 완성하고 있습니다.")
     
 #     return response
 
 def main():
-    st.title("뉴스봇 프로젝트 (11일 4시 ver)")
+    st.title("뉴스봇 프로젝트 (11일 5시 ver.3)")
 
     keyword1 = st.text_input("1번 검색어 : ")
     keyword2 = st.text_input("2번 검색어 : ")
@@ -116,14 +125,13 @@ def main():
             if crawled_article is None:
                 continue
 
-            # Append the article to existing_articles list
             existing_articles.append(crawled_article['content'])
 
             crawled_count += 1
             spinner_text = [
-                "첫번째 GPT가 키워드를 정리 하고 있습니다.",
+                "첫번째 GPT가 키워드를 분석 하고 있습니다.",
                 "두번째 GPT가 줄거리를 정리하고 있습니다.",
-                "세번째 GPT가 관련 내용을 모두 담은 리포트를 만드는 중입니다."
+                "세번째 GPT가 최종 리포트를 만드는 중입니다."
             ][crawled_count - 1]
     
             if summarized_content:  
@@ -134,16 +142,18 @@ def main():
              "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 문장 구조나 표현 방법 등을 바꿔서 보고서 스타일로 정리해. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 등 6하 원칙을 모두 포함해. 숫자 관련된 내용은 결과물에 전부 포함시키고 절대 틀리지 마. 담을 수 있는 내용 모두를 담아서 전체 1500자 이내로 써 줘. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼 줘. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
             ], spinner_text)
         
-        # st.session_state.summarized_content = duplicates(summarized_content)
         st.session_state.summarized_content = summarized_content
 
     if st.session_state.summarized_content:
-        st.write("## 참고용 리포트")
+            st.write("## 참고용 리포트")
     lines = st.session_state.summarized_content.split("\n------\n")
-    for i, line in enumerate(lines):
-        st.write(line)
-        if i < len(lines) - 1:
-            st.markdown("<hr/>", unsafe_allow_html=True)
+    unique_lines = remove_duplicates_from_summaries(lines)
+    st.session_state.summarized_content = "\n------\n".join(unique_lines)
+
+    for i, line in enumerate(unique_lines):
+                st.write(line)
+                if i < len(unique_lines) - 1:
+                    st.markdown("<hr/>", unsafe_allow_html=True)
 
     st.markdown("<span style='color: blue; font-size: large;'>리드문을 아래 필드에 대략 써서 넣으세요.</span>", unsafe_allow_html=True)
     st.session_state.prompt = st.text_area("('6하 원칙'이 포함되면 더 정확한 결과를 만듭니다.)", st.session_state.prompt, height=300)
