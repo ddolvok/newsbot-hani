@@ -3,8 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
-import smtplib
-from email.mime.text import MIMEText
+import json
 
 if 'summarized_content' not in st.session_state:
     st.session_state.summarized_content = ""
@@ -15,6 +14,7 @@ if 'prompt' not in st.session_state:
 
 API_KEY = st.secrets["api_key"]
 
+# Constants
 MAX_RETRY = 10
 WAIT_TIME = 5
 MAX_ARTICLE_SIZE = 2500
@@ -70,15 +70,13 @@ def crawl_and_get_article(url, index):
 
     return {"title": title_text, "content": article_text}
 
-def send_email(email, content):
-    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-    server.login('your_email@gmail.com', 'your_password')
-    msg = MIMEText(content, 'plain', 'utf-8')
-    msg['Subject'] = 'Your Generated Article'
-    msg['From'] = 'your_email@gmail.com'
-    msg['To'] = email
-    server.send_message(msg)
-    server.quit()
+# def duplicates(content):
+#     response = fetch_from_openai("gpt-4", [
+#         {"role": "user",
+#          "content": f"{content} 이 리포트에서 내용을 합쳐서 800자에서 1500자 사이로 정리해 줘. 6하 원칙을 모두 살려서 결과를 만들어. 중복된 내용은 최대한 합치고, 중복되지 않은 내용들은 결과물에 모두 나열해 줘. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼."}
+#     ], "GPT4가 참고용 리포트를 완성하고 있습니다.")
+    
+#     return response
 
 def main():
     st.title("미디어랩 뉴스봇 프로젝트")
@@ -109,27 +107,29 @@ def main():
 
             crawled_count += 1
             spinner_text = [
-                "첫 기사를 GPT4가 정리 하고 있습니다.",
-                "다음 기사를 GPT4가 정리하고 있습니다.",
-                "마지막 기사를 GPT4가 정리하고 있습니다."
+                "첫번째 GPT가 키워드를 정리 하고 있습니다.",
+                "두번째 GPT가 줄거리를 정리하고 있습니다.",
+                "세번째 GPT가 관련 내용을 모두 담은 리포트를 만드는 중입니다."
             ][crawled_count - 1]
+    
+            if summarized_content:  
+                summarized_content += "\n------\n"  
+    
             summarized_content += fetch_from_openai("gpt-4", [
-                {"role": "user",
-                 "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 잘 정리해서 신문 기사 스타일의 보고 자료를 만들어. 각각 크롤링 된 내용들을 하나로 잘 합쳐서 잘 정리된 리포트로 만들거야. 중복된 내용은 빼도 좋아. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 등 6하 원칙을 정확히 지키면서 숫자 등은 정확하게 확인해. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 내용들은 빼고 2500자 이내로 써 줘. 문장의 마무리는 늘 '했다' '됐다' '줬다' '였다' 처럼 끝내야 해. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
+            {"role": "user",
+             "content": f"{crawled_article['title']} 및 {crawled_article['content']} 내용들을 문장 구조나 표현 방법 등을 바꿔서 보고서 스타일로 정리해. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 등 6하 원칙을 모두 포함해. 숫자 관련된 내용은 결과물에 전부 포함시키고 절대 틀리지 마. 담을 수 있는 내용 모두를 담아서 전체 2500자 정도 써 줘. '눈길을 끌었다' '주목된다' 등 판단이나 창의적인 표현들은 빼고 '됐다' '했다' '한다' '된다' 같은 반말로 써 줘. 내용 중에 [] 이 대괄호나 = 같은 부호가 들어가지 않게 해줘."}
             ], spinner_text)
         
+        # st.session_state.summarized_content = duplicates(summarized_content)
         st.session_state.summarized_content = summarized_content
 
     if st.session_state.summarized_content:
         st.write("## 참고용 리포트")
-        st.write(st.session_state.summarized_content)
-
-        st.download_button(
-        label="리포트 다운로드",
-        data=st.session_state.summarized_content.encode("utf-8"),
-        file_name="summarized_report.txt",
-        mime="text/plain"
-    )
+    lines = st.session_state.summarized_content.split("\n------\n")
+    for i, line in enumerate(lines):
+        st.write(line)
+        if i < len(lines) - 1:
+            st.markdown("<hr/>", unsafe_allow_html=True)
 
     st.session_state.prompt = st.text_area("리드문을 대략 써서 넣으세요.", st.session_state.prompt, height=300)
 
@@ -141,28 +141,20 @@ def main():
         final_article_content = st.session_state.prompt + "\n\n" + st.session_state.summarized_content
         st.session_state.final_article_content = fetch_from_openai("gpt-4", [
             {"role": "user",
-             "content": f"이 리포트({st.session_state.summarized_content})를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 문장 구조로 1000자 이내로 기사를 써 줘. 특히 참조용 리포트 중에서 숫자는 최대한 많이 반영해서 기사를 써 줘. {st.session_state.prompt}에 써놓은 기사 시작문으로 문장을 시작해. 기사 시작문과 관련된 내용으로만 기사 초안을 만들어 줘. 누가, 언제, 어디서, 무엇을, 어떻게, 왜 같은 6하원칙을 모두 잘 적용해서 기사를 써 줘. '~한다' '~된다' '~했다' '~됐다'와 같은 반말로 써."}
+             "content": f"이 리포트({st.session_state.summarized_content}) 이 리포트를 토대로 신문 기사를 쓸거야. 정리된 리포트 내용과 조금 다른 문장 구조로 1200자 내로 기사를 써 줘. 특히 숫자와 관련된 내용을 다룰 때 틀리지마. ({st.session_state.prompt})에 써놓은 문장으로 기사를 시작해줘. 전체 리포트 중에서 기사 시작문 관련 내용만을 뽑아와서 기사를 써 줘. '~했다' '~됐다'와 같은 반말로 써."}
         ], "GPT4가 리포트를 기사 초안으로 만들고 있습니다.")
 
     if st.session_state.final_article_content:
         st.write("## 기사 초안")
-        st.write(st.session_state.final_article_content)  
+        st.write(st.session_state.final_article_content)
 
+    if st.session_state.final_article_content:
         st.download_button(
-            label="기사 초안 다운로드",
-            data=st.session_state.final_article_content.encode("utf-8"),
-            file_name="generated_article.txt",
-            mime="text/plain"
-        )
-
-    if st.session_state.final_article_content: 
-        email_input = st.text_input("이메일 주소")
-        if st.button("이메일 보내기"):
-            if email_input:
-                send_email(email_input, st.session_state.final_article_content)
-                st.success(f"{email_input}로 기사 초안을 보냈습니다.")
-            else:
-                st.error("유효한 이메일 주소를 입력해주세요.")
+                        label="다운로드",
+                        data=st.session_state.final_article_content.encode("utf-8"),
+                        file_name="generated_article.txt",
+                        mime="text/plain",
+                    )
 
 if __name__ == "__main__":
     main()
