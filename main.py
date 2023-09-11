@@ -136,9 +136,13 @@ def main():
 
 
     if st.button("생성하기"):
+        if not st.session_state.summarized_content:
+            st.markdown("<span style='color:red'>키워드를 넣고 분석부터 해야 합니다!</span>", unsafe_allow_html=True)
+            return 
+
         if len(st.session_state.prompt) <= 10:
             st.markdown("<span style='color:red'>10자 이상의 리드문을 입력해주세요.</span>", unsafe_allow_html=True)
-            return
+            return 
 
         final_article_content = st.session_state.prompt + "\n\n" + st.session_state.summarized_content
         st.session_state.final_article_content = fetch_from_openai("gpt-4", [
