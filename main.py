@@ -97,7 +97,7 @@ def crawl_and_get_article(url, index, existing_contents=[]):
 #     return response
 
 def main():
-    st.title("뉴스봇 프로젝트 (11일 5시 ver.3)")
+    st.title("뉴스봇 보고봇 프로젝트")
 
     keyword1 = st.text_input("1번 검색어 : ")
     keyword2 = st.text_input("2번 검색어 : ")
